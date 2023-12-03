@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <stack>
 using namespace std;
 
@@ -17,73 +18,55 @@ public:
         adjList[node1 - 1].push_back(node2 - 1);
     }
 
-    void topologicalSortUtil(int v,bool visited[], stack<int> &Stack) {
-        visited[v] = true;
-
-        vector<int>::iterator i;
-        for (i = adjList[v].begin(); i != adjList[v].end(); ++i) {
-            if (!visited[*i]) {
-                topologicalSortUtil(*i, visited, Stack);
-            }
-        }
-        Stack.push(v);
-    }
-
-    bool isCyclicUtil(int v, bool visited[], bool recStack[]) {
+    bool topologicalSortUtil(int v, bool visited[], stack<int>& Stack, bool recStack[]) {
         visited[v] = true;
         recStack[v] = true;
 
         vector<int>::iterator i;
         for (i = adjList[v].begin(); i != adjList[v].end(); ++i) {
-            if (!visited[*i] && isCyclicUtil(*i, visited, recStack)) {
-                return true;
-            } else if(recStack[*i]) {
-                return true;
+            if (!visited[*i] && !topologicalSortUtil(*i, visited, Stack, recStack)) {
+                return false;
+            } if (recStack[*i]) {
+                return false;
             }
         }
+        Stack.push(v);
         recStack[v] = false;
-        return false;
-    } 
+        return true;
+    }
 
-    bool isCyclic() {
+
+    void topologicalSort() {
+        stack<int> Stack;
+
         bool* visited = new bool[v];
         bool* recStack = new bool[v];
         for (int i = 0; i < v; i++) {
             visited[i] = false;
             recStack[i] = false;
         }
+
+        bool flag = true;
+
         for (int i = 0; i < v; i++) {
             if (!visited[i]) {
-                if (isCyclicUtil(i, visited, recStack)) {
-                    return true;
+                if (!topologicalSortUtil(i, visited, Stack, recStack)) {
+                    flag = false;
+                    break;
                 }
             }
         }
-        return false;
-    }
 
-    bool topologicalSort() {
-        if (isCyclic()) {
-            return false;
-        }
-        bool* visited = new bool[v];
-
-        for (int i = 0; i < v; i++) {
-            visited[i] = false;
+        if (!flag) {
+            cout << "-1\n";
+            return;
         }
 
-        stack<int> Stack;
-        for (int i = 0; i < v; i++) {
-            if (!visited[i]) {
-                topologicalSortUtil(i, visited, Stack);
-            }
-        }
-
-        for (int i = 0; i < v; i++) {
+        while(!Stack.empty()) {
             cout << Stack.top() + 1 << " ";
             Stack.pop();
         }
-        return true;
+        cout << endl;
 
     }
 };
@@ -101,8 +84,5 @@ int main() {
             g.add_edge(m, i + 1);
         }
     }
-    if (!g.topologicalSort()) {
-        cout << "-1";
-    }
-    cout << endl;
+    g.topologicalSort();
 }
